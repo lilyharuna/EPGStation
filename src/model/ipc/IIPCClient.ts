@@ -37,6 +37,7 @@ export interface IPCRecordedTagManageModel {
 
 export interface IPCRecordingManageModel {
     resetTimer(): void;
+    stopRecording(reserveId: apid.ReserveId): Promise<void>;
 }
 
 export interface IPCRuleManageModel {

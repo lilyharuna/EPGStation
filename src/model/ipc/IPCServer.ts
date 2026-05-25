@@ -342,6 +342,12 @@ export default class IPCServer implements IIPCServer {
             this.recordingManage.resetTimer();
         };
 
+        // stopRecording
+        index[RecordingFunctions.stopRecording] = async msg => {
+            const reserveId = this.getArgsValue<apid.ReserveId>(msg, 'reserveId');
+            await this.recordingManage.stopRecording(reserveId);
+        };
+
         return index;
     }
 

@@ -28,6 +28,10 @@ export default class RecordedItemUtil implements IRecordedItemUtil {
             isProtected: recorded.isProtected,
         };
 
+        if (recorded.reserveId !== null) {
+            item.reserveId = recorded.reserveId;
+        }
+
         if (recorded.ruleId !== null) {
             item.ruleId = recorded.ruleId;
         }

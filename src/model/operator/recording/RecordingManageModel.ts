@@ -280,6 +280,21 @@ class RecordingManageModel implements IRecordingManageModel {
     }
 
     /**
+     * 録画ファイルを削除せずに録画を停止する
+     * @param reserveId: ReserveId 予約 ID
+     */
+    public async stopRecording(reserveId: apid.ReserveId): Promise<void> {
+        const recording = this.recordingIndex[reserveId];
+
+        if (typeof recording === 'undefined') {
+            throw new Error('recording is not found');
+        }
+
+        this.log.system.info(`stop recording reserveId: ${reserveId}`);
+        return recording.stopRecording();
+    }
+
+    /**
      * タイマーを再設定する
      */
     public resetTimer(): void {

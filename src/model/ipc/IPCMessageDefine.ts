@@ -107,6 +107,7 @@ export enum RecordedTagFunctions {
  */
 export enum RecordingFunctions {
     resetTimer = 'resetTimer',
+    stopRecording = 'stopRecording',
 }
 
 /**

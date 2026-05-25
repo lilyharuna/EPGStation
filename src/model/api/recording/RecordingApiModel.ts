@@ -50,4 +50,8 @@ export default class RecordingApiModel implements IRecordingApiModel {
     public async resetTimer(): Promise<void> {
         await this.ipc.recording.resetTimer();
     }
+
+    public async stopRecording(reserveId: apid.ReserveId): Promise<void> {
+        await this.ipc.recording.stopRecording(reserveId);
+    }
 }

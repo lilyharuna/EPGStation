@@ -819,6 +819,15 @@ class RecorderModel implements IRecorderModel {
     }
 
     /**
+     * 録画ファイルを削除せずに録画を停止する
+     */
+    public async stopRecording(): Promise<void> {
+        this.log.system.info(`recording stop reserveId: ${this.reserve.id}, recordedId: ${this.recordedId}`);
+
+        await this.cancel(false);
+    }
+
+    /**
      * 予約情報を更新する
      * @param newReserve: 新しい予約情報
      * @param isSuppressLog: boolean ログ出力を抑えるか
