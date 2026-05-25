@@ -352,6 +352,7 @@ export interface Records {
  */
 export interface RecordedItem {
     id: RecordedId;
+    reserveId?: ReserveId;
     ruleId?: RuleId;
     programId?: ProgramId;
     channelId: ChannelId;
