@@ -32,6 +32,17 @@ export interface ProgramDomItem {
     genreLv1?: apid.ProgramGenreLv1;
 }
 
+/**
+ * カスタム録画オーバーレイ DOM データ
+ */
+export interface CustomReserveDomItem {
+    element: HTMLElement;
+    top: number;
+    left: number;
+    height: number;
+    isVisible: boolean;
+}
+
 export default interface IGuideState {
     clearDate(): void;
     setDisplayRange(baseSize: DisplayRange): void;
@@ -46,6 +57,7 @@ export default interface IGuideState {
     getTimes(): number[];
     getTimesLength(): number;
     getProgramDoms(): ProgramDomItem[];
+    getCustomReserveDoms(): CustomReserveDomItem[];
     getTitle(type?: string): string;
     getSingleStationTitle(): string;
 }

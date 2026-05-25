@@ -6,8 +6,8 @@ import DateUtil from '../../../util/DateUtil';
 import IScheduleApiModel from '../../api/schedule/IScheduleApiModel';
 import { ISettingStorageModel } from '../../storage/setting/ISettingStorageModel';
 import IGuideProgramDialogState, { ProgramDialogOpenOption } from './IGuideProgramDialogState';
-import IGuideReserveUtil, { ReserveStateItemIndex } from './IGuideReserveUtil';
-import IGuideState, { DisplayRange, FetchGuideOption, ProgramDomItem } from './IGuideState';
+import IGuideReserveUtil, { CustomReserveStateItem, ReserveStateItemIndex } from './IGuideReserveUtil';
+import IGuideState, { CustomReserveDomItem, DisplayRange, FetchGuideOption, ProgramDomItem } from './IGuideState';
 
 interface CreateProgramDomOption {
     top: number;
@@ -16,6 +16,15 @@ interface CreateProgramDomOption {
     channel: apid.ScheduleChannleItem;
     program: apid.ScheduleProgramItem;
     isHidden: boolean;
+}
+
+interface CreateCustomReserveDomOption {
+    top: number;
+    left: number;
+    height: number;
+    reserve: apid.ReserveItem;
+    hasTopBorder: boolean;
+    hasBottomBorder: boolean;
 }
 
 @injectable()
@@ -30,6 +39,7 @@ class GuideState implements IGuideState {
     private startAt: apid.UnixtimeMS = 0;
     private endAt: apid.UnixtimeMS = 0;
     private programDoms: ProgramDomItem[] = [];
+    private customReserveDoms: CustomReserveDomItem[] = [];
     // 番組情報を programId 索引するための変数
     private programDomIndex: { [programId: number]: HTMLElement[] } = {};
 
@@ -37,6 +47,7 @@ class GuideState implements IGuideState {
     private timeLength: number = 0;
     private schedules: apid.Schedule[] = [];
     private reserveIndex: ReserveStateItemIndex = {};
+    private customReserveItems: CustomReserveStateItem[] = [];
 
     constructor(
         @inject('IScheduleApiModel') scheduleApiModel: IScheduleApiModel,
@@ -60,12 +71,14 @@ class GuideState implements IGuideState {
         this.startAt = 0;
         this.endAt = 0;
         this.programDoms = [];
+        this.customReserveDoms = [];
         this.programDomIndex = {};
 
         this.startTime = null;
         this.timeLength = 0;
         this.schedules = [];
         this.reserveIndex = {};
+        this.customReserveItems = [];
     }
 
     /**
@@ -140,12 +153,13 @@ class GuideState implements IGuideState {
 
         this.startAt = startAt;
         this.endAt = endAt;
-
         // 予約情報取得
-        this.reserveIndex = await this.reserveUtil.getReserveIndex({
+        const reserveOption = {
             startAt,
             endAt,
-        });
+        };
+        this.reserveIndex = await this.reserveUtil.getReserveIndex(reserveOption);
+        this.customReserveItems = await this.reserveUtil.getCustomReserveItems(reserveOption);
     }
 
     /**
@@ -161,6 +175,7 @@ class GuideState implements IGuideState {
         const genreSettings = this.genreSetting.getSavedValue();
 
         this.programDoms = [];
+        this.customReserveDoms = [];
         this.programDomIndex = {};
         let baseStartAt = this.startAt;
         let baseEndAt = isSingleStation === true ? baseStartAt + 60 * 60 * GuideState.SINGLE_STATION_LENGTH * 1000 : this.endAt;
@@ -209,6 +224,90 @@ class GuideState implements IGuideState {
                 baseEndAt = baseStartAt + 60 * 60 * GuideState.SINGLE_STATION_LENGTH * 1000;
             }
         }
+
+        this.createCustomReserveDoms(isSingleStation);
+    }
+    /**
+     * カスタム録画オーバーレイ DOM 生成
+     * @param isSingleStation: boolean 単局表示か
+     */
+    private createCustomReserveDoms(isSingleStation: boolean): void {
+        let baseStartAt = this.startAt;
+        let baseEndAt = isSingleStation === true ? baseStartAt + 60 * 60 * GuideState.SINGLE_STATION_LENGTH * 1000 : this.endAt;
+
+        for (let i = 0; i < this.schedules.length; i++) {
+            for (const customReserve of this.customReserveItems) {
+                const reserve = customReserve.item;
+
+                if (reserve.channelId !== this.schedules[i].channel.id) {
+                    continue;
+                }
+
+                if (reserve.endAt <= baseStartAt || reserve.startAt >= baseEndAt) {
+                    continue;
+                }
+
+                const visibleStartAt = Math.max(reserve.startAt, baseStartAt);
+                const visibleEndAt = Math.min(reserve.endAt, baseEndAt);
+                const top = this.getTop(baseStartAt, visibleStartAt);
+                const height = this.getDiffMin(visibleStartAt, visibleEndAt);
+
+                if (height <= 0) {
+                    continue;
+                }
+
+                const element = this.createCustomReserveDom({
+                    top,
+                    left: i,
+                    height,
+                    reserve,
+                    hasTopBorder: reserve.startAt >= baseStartAt,
+                    hasBottomBorder: reserve.endAt <= baseEndAt,
+                });
+
+                this.customReserveDoms.push({
+                    element,
+                    top,
+                    left: i,
+                    height,
+                    isVisible: false,
+                });
+            }
+
+            if (isSingleStation === true) {
+                baseStartAt += 60 * 60 * GuideState.SINGLE_STATION_LENGTH * 1000;
+                baseEndAt = baseStartAt + 60 * 60 * GuideState.SINGLE_STATION_LENGTH * 1000;
+            }
+        }
+    }
+
+    /**
+     * カスタム録画オーバーレイ DOM 生成
+     * @param option: CreateCustomReserveDomOption
+     * @return HTMLElement
+     */
+    private createCustomReserveDom(option: CreateCustomReserveDomOption): HTMLElement {
+        let classStr = 'custom-reserve-overlay hidden';
+
+        if (option.hasTopBorder === false) {
+            classStr += ' no-top-border';
+        }
+        if (option.hasBottomBorder === false) {
+            classStr += ' no-bottom-border';
+        }
+
+        return this.createParentElement(
+            'div',
+            {
+                class: classStr,
+                title: option.reserve.name,
+                style:
+                    `height: calc(${option.height} * (var(--timescale-height) / 60));` +
+                    `top: calc(${option.top} * (var(--timescale-height) / 60)); ` +
+                    `left: calc(${option.left} * (var(--channel-width)));`,
+            },
+            [],
+        );
     }
 
     /**
@@ -370,6 +469,33 @@ class GuideState implements IGuideState {
                 }
             }
         }
+
+        for (const dom of this.customReserveDoms) {
+            let isVisible = true;
+
+            // 幅方向
+            if (
+                (dom.left + 1) * this.displayRange.baseWidth <= this.displayRange.offsetWidth - this.displayRange.maxWidth ||
+                dom.left * this.displayRange.baseWidth >= this.displayRange.maxWidth + this.displayRange.offsetWidth
+            ) {
+                isVisible = false;
+            }
+
+            // 高さ方向
+            if (dom.top * baseHeight >= topEnd || (dom.top + dom.height) * baseHeight <= topStart) {
+                isVisible = false;
+            }
+
+            // 現在の表示と違っていれば更新
+            if (dom.isVisible !== isVisible) {
+                dom.isVisible = isVisible;
+                if (isVisible) {
+                    dom.element.classList.remove('hidden');
+                } else {
+                    dom.element.classList.add('hidden');
+                }
+            }
+        }
     }
 
     /**
@@ -395,10 +521,12 @@ class GuideState implements IGuideState {
      * @reutn Promise<void>
      */
     public async updateReserves(): Promise<void> {
-        const newReserveIndex = await this.reserveUtil.getReserveIndex({
+        const reserveOption = {
             startAt: this.startAt,
             endAt: this.endAt,
-        });
+        };
+        const newReserveIndex = await this.reserveUtil.getReserveIndex(reserveOption);
+        this.customReserveItems = await this.reserveUtil.getCustomReserveItems(reserveOption);
 
         // 古い予約情報の class を削除
         for (const programId in this.reserveIndex) {
@@ -423,6 +551,8 @@ class GuideState implements IGuideState {
         }
 
         this.reserveIndex = newReserveIndex;
+
+        this.createProgramDoms(false);
 
         // 番組ダイアログを開いている場合は予約情報を更新する
         if (this.programDialogState.isOpen === true) {
@@ -535,6 +665,14 @@ class GuideState implements IGuideState {
      */
     public getProgramDoms(): ProgramDomItem[] {
         return this.programDoms;
+    }
+
+    /**
+     * カスタム録画オーバーレイ
+     * @return CustomReserveDomItem[]
+     */
+    public getCustomReserveDoms(): CustomReserveDomItem[] {
+        return this.customReserveDoms;
     }
 
     /**

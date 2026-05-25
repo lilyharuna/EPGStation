@@ -9,6 +9,11 @@ export interface ReserveStateItem {
 
 export type ReserveStateItemIndex = { [programId: number]: ReserveStateItem };
 
+export interface CustomReserveStateItem {
+    item: apid.ReserveItem;
+}
+
 export default interface IGuideReserveUtil {
     getReserveIndex(option: apid.GetReserveListsOption): Promise<ReserveStateItemIndex>;
+    getCustomReserveItems(option: apid.GetReserveListsOption): Promise<CustomReserveStateItem[]>;
 }

@@ -316,6 +316,11 @@ export default class Guide extends Vue {
                         }
                     }
 
+                    const customReserveDoms = this.guideState.getCustomReserveDoms();
+                    for (const dom of customReserveDoms) {
+                        (this.$refs.content as HTMLElement).appendChild(dom.element);
+                    }
+
                     this.guideState.updateVisible();
 
                     // 番組表を矢印キーで操作できるようにフォーカスする
@@ -549,6 +554,26 @@ $window-width: 600px
 
             .description
                 white-space: pre-wrap
+
+        .custom-reserve-overlay
+            position: absolute
+            max-width: var(--channel-width)
+            min-width: var(--channel-width)
+            width: var(--channel-width)
+            box-sizing: border-box
+            border: 4px solid red
+            pointer-events: none
+            z-index: 20
+            background-color: rgba(255, 0, 0, 0.08)
+
+            &.hidden
+                display: none
+
+            &.no-top-border
+                border-top: none
+
+            &.no-bottom-border
+                border-bottom: none
 
         &.is-dark
             .item

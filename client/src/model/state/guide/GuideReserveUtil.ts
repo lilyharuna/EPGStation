@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../../api';
 import IReservesApiModel from '../..//api/reserves/IReservesApiModel';
-import IGuideReserveUtil, { ReserveStateItemIndex } from './IGuideReserveUtil';
+import IGuideReserveUtil, { CustomReserveStateItem, ReserveStateItemIndex } from './IGuideReserveUtil';
 
 @injectable()
 export default class GuideReserveUtil implements IGuideReserveUtil {
@@ -56,5 +56,28 @@ export default class GuideReserveUtil implements IGuideReserveUtil {
         }
 
         return result;
+    }
+
+    /**
+     * カスタム録画予約情報を取得
+     * @param option: GetReserveListsOption
+     * @return Promise<CustomReserveStateItem[]>
+     */
+    public async getCustomReserveItems(option: apid.GetReserveListsOption): Promise<CustomReserveStateItem[]> {
+        const reserves = await this.reservesApiModel.gets({
+            startAt: option.startAt,
+            endAt: option.endAt,
+            isHalfWidth: false,
+        } as apid.GetReserveOption);
+
+        return reserves.reserves
+            .filter(reserve => {
+                return reserve.isTimeSpecified === true && reserve.name.endsWith(' [カスタム録画]');
+            })
+            .map(reserve => {
+                return {
+                    item: reserve,
+                };
+            });
     }
 }
