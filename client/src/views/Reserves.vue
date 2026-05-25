@@ -31,7 +31,7 @@
             <v-card>
                 <v-card-title>カスタム録画を追加</v-card-title>
                 <v-card-text>
-                    <v-text-field v-model="customRecordingChannelId" label="チャンネルID" type="number" required></v-text-field>
+                    <v-select v-model="customRecordingChannelId" :items="customRecordingChannelItems" item-text="text" item-value="value" label="チャンネル" required></v-select>
                     <v-text-field v-model="customRecordingName" label="録画名" placeholder="未入力の場合は自動生成"></v-text-field>
                     <v-select v-model="customRecordingMode" :items="customRecordingModeItems" item-text="text" item-value="value" label="録画方法"></v-select>
                     <v-text-field v-model="customRecordingStartAt" label="開始日時" type="datetime-local"></v-text-field>
@@ -90,7 +90,7 @@ export default class Reserves extends Vue {
     public isEditMode: boolean = false;
     public isOpenMultiplueDeletionDialog: boolean = false;
     public isOpenCustomRecordingDialog: boolean = false;
-    public customRecordingChannelId: string = '';
+    public customRecordingChannelId: apid.ChannelId | null = null;
     public customRecordingName: string = '';
     public customRecordingMode: apid.CustomRecordingMode = 'duration';
     public customRecordingStartAt: string = '';
@@ -101,6 +101,7 @@ export default class Reserves extends Vue {
         { text: '終了日時を指定', value: 'time' },
         { text: '手動で停止するまで', value: 'manualStop' },
     ];
+    public customRecordingChannelItems: { text: string; value: apid.ChannelId }[] = [];
 
     private isVisibilityHidden: boolean = false;
     private reservesState: IReservesState = container.get<IReservesState>('IReservesState');
@@ -148,6 +149,14 @@ export default class Reserves extends Vue {
 
         // socket.io イベント
         this.socketIoModel.onUpdateState(this.onUpdateStatusCallback);
+
+        this.fetchCustomRecordingChannels().catch(err => {
+            this.snackbarState.open({
+                color: 'error',
+                text: 'チャンネル一覧の取得に失敗しました。',
+            });
+            console.error(err);
+        });
     }
 
     public beforeDestroy(): void {
@@ -173,6 +182,7 @@ export default class Reserves extends Vue {
         const endAt = new Date(startAt.getTime() + 30 * 60 * 1000);
 
         this.customRecordingName = '';
+        this.customRecordingChannelId = this.customRecordingChannelItems.length > 0 ? this.customRecordingChannelItems[0].value : null;
         this.customRecordingMode = 'duration';
         this.customRecordingStartAt = this.toDatetimeLocalValue(startAt);
         this.customRecordingEndAt = this.toDatetimeLocalValue(endAt);
@@ -181,12 +191,12 @@ export default class Reserves extends Vue {
     }
 
     public async onExecuteCustomRecording(): Promise<void> {
-        const channelId = parseInt(this.customRecordingChannelId, 10);
+        const channelId = this.customRecordingChannelId;
 
-        if (Number.isNaN(channelId) === true) {
+        if (channelId === null) {
             this.snackbarState.open({
                 color: 'error',
-                text: 'チャンネルIDを入力してください。',
+                text: 'チャンネルを選択してください。',
             });
             return;
         }
@@ -295,6 +305,32 @@ export default class Reserves extends Vue {
             limit: this.settingValue.reservesLength,
         };
     }
+    private async fetchCustomRecordingChannels(): Promise<void> {
+        const response = await fetch('./api/channels');
+
+        if (response.ok === false) {
+            throw new Error('FetchChannelsError');
+        }
+
+        const data = await response.json();
+        const channels = Array.isArray(data) === true ? data : data.channels;
+
+        if (Array.isArray(channels) === false) {
+            throw new Error('InvalidChannelsResponse');
+        }
+
+        this.customRecordingChannelItems = channels
+            .filter((channel: any) => {
+                return typeof channel.id === 'number' && typeof channel.name === 'string';
+            })
+            .map((channel: any) => {
+                return {
+                    text: `${channel.name} (${channel.id})`,
+                    value: channel.id,
+                };
+            });
+    }
+
     private toDatetimeLocalValue(date: Date): string {
         const year = date.getFullYear().toString(10).padStart(4, '0');
         const month = (date.getMonth() + 1).toString(10).padStart(2, '0');
