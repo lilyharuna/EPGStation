@@ -833,6 +833,18 @@ class RecorderModel implements IRecorderModel {
      * @param isSuppressLog: boolean ログ出力を抑えるか
      */
     public async update(newReserve: Reserve, isSuppressLog: boolean): Promise<void> {
+        if (this.isRecording === true) {
+            if (isSuppressLog === false) {
+                this.log.system.info(
+                    `ignore reserve update while recording reserveId: ${this.reserve.id}, ` +
+                        `recordedId: ${this.recordedId}, oldStartAt: ${this.reserve.startAt}, ` +
+                        `oldEndAt: ${this.reserve.endAt}, newStartAt: ${newReserve.startAt}, ` +
+                        `newEndAt: ${newReserve.endAt}`,
+                );
+            }
+
+            return;
+        }
         if (newReserve.isSkip === true || newReserve.isOverlap === true) {
             // skip されたかチェック
             this.log.system.info(
@@ -883,11 +895,6 @@ class RecorderModel implements IRecorderModel {
                         }
                     }
                 } else {
-                    // 録画中に終了時間が変更されたらイベントリレーの確認タイマーも再設定する
-                    if (this.reserve.endAt !== newReserve.endAt && this.isRecording === true) {
-                        this.setEventRelayTimer(newReserve);
-                    }
-
                     if (this.reserve.startAt < newReserve.startAt) {
                         // 開始時刻が遅くなった
                         if (this.isRecording === false) {
@@ -920,13 +927,6 @@ class RecorderModel implements IRecorderModel {
         }
 
         this.reserve = newReserve;
-
-        // update recorded DB
-        if (this.isRecording === true && this.recordedId !== null) {
-            const recorded = await this.createRecorded();
-            this.log.system.info(`update reocrded: ${this.recordedId}`);
-            this.recordedDB.updateOnce(recorded);
-        }
     }
 
     /**
