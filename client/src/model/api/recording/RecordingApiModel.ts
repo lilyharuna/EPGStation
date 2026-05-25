@@ -23,4 +23,12 @@ export default class RecordingApiModel implements IRecordingApiModel {
 
         return result.data;
     }
+
+    /**
+     * 録画ファイルを削除せずに録画を停止する
+     * @param reserveId: ReserveId
+     */
+    public async stopRecording(reserveId: apid.ReserveId): Promise<void> {
+        await this.repository.post(`/recording/${reserveId}/stop`);
+    }
 }

@@ -24,6 +24,7 @@
                     :isEditMode.sync="isEditMode"
                     :isShowDropInfo="false"
                     v-on:detail="gotoDetail"
+                    v-on:stopRecording="stopRecording"
                     v-on:selected="selectItem"
                 ></RecordedItems>
                 <Pagination :total="recordingState.getTotal()" :pageSize="settingValue.recordingLength"></Pagination>
@@ -117,6 +118,24 @@ export default class Recording extends Vue {
 
     public selectItem(recordedId: apid.RecordedId): void {
         this.recordingState.select(recordedId);
+    }
+
+    public async stopRecording(reserveId: apid.ReserveId): Promise<void> {
+        try {
+            await this.recordingState.stopRecording(reserveId);
+            await this.recordingState.fetchData(this.createFetchDataOption());
+
+            this.snackbarState.open({
+                color: 'success',
+                text: '録画を停止しました。',
+            });
+        } catch (err) {
+            this.snackbarState.open({
+                color: 'error',
+                text: '録画の停止に失敗しました。',
+            });
+            console.error(err);
+        }
     }
 
     public onMultiplueDeletion(): void {

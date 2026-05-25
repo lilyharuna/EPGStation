@@ -59,6 +59,14 @@ export default class RecordingState implements IRecordingState {
     }
 
     /**
+     * 録画ファイルを削除せずに録画を停止する
+     * @param reserveId: apid.ReserveId
+     */
+    public async stopRecording(reserveId: apid.ReserveId): Promise<void> {
+        await this.recordingApiModel.stopRecording(reserveId);
+    }
+
+    /**
      * 取得した録画情報を返す
      * @return RecordedStateData[]
      */

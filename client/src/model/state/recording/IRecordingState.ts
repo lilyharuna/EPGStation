@@ -11,4 +11,5 @@ export default interface IRecordingState {
     selectAll(): void;
     clearSelect(): void;
     multiplueDeletion(): Promise<void>;
+    stopRecording(reserveId: apid.ReserveId): Promise<void>;
 }

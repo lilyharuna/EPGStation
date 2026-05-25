@@ -16,7 +16,12 @@
                         <td>{{ item.display.channelName }}</td>
                         <td>{{ item.display.shortTime }} ({{ item.display.duration }} m)</td>
                         <td class="menu">
-                            <RecordedItemMenu v-if="isEditMode === false" :recordedItem="item.recordedItem" v-on:stopEncode="stopEncode"></RecordedItemMenu>
+                            <RecordedItemMenu
+                                v-if="isEditMode === false"
+                                :recordedItem="item.recordedItem"
+                                v-on:stopEncode="stopEncode"
+                                v-on:stopRecording="stopRecording"
+                            ></RecordedItemMenu>
                         </td>
                     </tr>
                 </tbody>
@@ -57,6 +62,10 @@ export default class RecordedTableItems extends Vue {
 
     public stopEncode(recordedId: apid.RecordedId): void {
         this.$emit('stopEncode', recordedId);
+    }
+
+    public stopRecording(reserveId: apid.ReserveId): void {
+        this.$emit('stopRecording', reserveId);
     }
 }
 </script>

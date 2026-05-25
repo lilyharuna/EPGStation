@@ -9,6 +9,7 @@
                     :isShowDropInfo="isShowDropInfo"
                     v-on:detail="gotoDetail"
                     v-on:stopEncode="stopEncode"
+                    v-on:stopRecording="stopRecording"
                     v-on:selected="selected"
                 ></RecordedLargeCard>
             </div>
@@ -20,6 +21,7 @@
                 :isShowDropInfo="isShowDropInfo"
                 v-on:detail="gotoDetail"
                 v-on:stopEncode="stopEncode"
+                v-on:stopRecording="stopRecording"
                 v-on:selected="selected"
             ></RecordedTableItems>
             <div v-for="r in recorded" v-bind:key="r.recordedItem.id"></div>
@@ -32,6 +34,7 @@
                     :isShowDropInfo="isShowDropInfo"
                     v-on:detail="gotoDetail"
                     v-on:stopEncode="stopEncode"
+                    v-on:stopRecording="stopRecording"
                     v-on:selected="selected"
                     :noThumbnail="!!isRecording === true"
                 ></RecordedsmallCard>
@@ -108,6 +111,10 @@ class RecordedItems extends Vue {
 
     public stopEncode(recordedId: apid.RecordedId): void {
         this.$emit('stopEncode', recordedId);
+    }
+
+    public stopRecording(reserveId: apid.ReserveId): void {
+        this.$emit('stopRecording', reserveId);
     }
 
     public selected(recordedId: apid.RecordedId): void {

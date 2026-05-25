@@ -55,6 +55,14 @@
                         <v-list-item-title>stop</v-list-item-title>
                     </v-list-item-content>
                 </v-list-item>
+                <v-list-item v-if="recordedItem.isRecording === true && typeof recordedItem.reserveId !== 'undefined'" v-on:click="stopRecording">
+                    <v-list-item-icon class="mr-3">
+                        <v-icon>mdi-stop-circle-outline</v-icon>
+                    </v-list-item-icon>
+                    <v-list-item-content>
+                        <v-list-item-title>録画停止</v-list-item-title>
+                    </v-list-item-content>
+                </v-list-item>
                 <v-list-item v-on:click="openDeleteDialog">
                     <v-list-item-icon class="mr-3">
                         <v-icon>mdi-delete</v-icon>
@@ -172,6 +180,14 @@ export default class RecordedItemMenu extends Vue {
 
     public async stopEncode(): Promise<void> {
         this.$emit('stopEncode', this.recordedItem.id);
+    }
+
+    public async stopRecording(): Promise<void> {
+        if (typeof this.recordedItem.reserveId === 'undefined') {
+            return;
+        }
+
+        this.$emit('stopRecording', this.recordedItem.reserveId);
     }
 
     public async openDeleteDialog(): Promise<void> {
