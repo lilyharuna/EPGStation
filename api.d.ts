@@ -54,6 +54,7 @@ export interface EditManualReserveOption {
 /**
  * 手動予約オプション
  */
+
 export interface ManualReserveOption extends EditManualReserveOption {
     programId?: ProgramId; // program ID undefined の場合は時刻指定予約
     timeSpecifiedOption?: {
@@ -62,6 +63,23 @@ export interface ManualReserveOption extends EditManualReserveOption {
         startAt: UnixtimeMS;
         endAt: UnixtimeMS;
     };
+}
+
+/**
+ * カスタム録画モード
+ */
+export type CustomRecordingMode = 'time' | 'duration' | 'manualStop';
+
+/**
+ * カスタム録画追加オプション
+ */
+export interface CustomRecordingOption {
+    channelId: ChannelId;
+    startAt?: UnixtimeMS;
+    endAt?: UnixtimeMS;
+    durationMinutes?: number;
+    mode?: CustomRecordingMode;
+    name?: string;
 }
 
 /**
@@ -757,4 +775,8 @@ export interface StorageInfo {
  */
 export interface VersionInfo {
     version: string;
+}
+
+export interface AddedReserve {
+    reserveId: ReserveId;
 }

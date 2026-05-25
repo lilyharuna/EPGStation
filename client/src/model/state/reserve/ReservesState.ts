@@ -44,6 +44,15 @@ export default class ReservesState implements IReservesState {
     }
 
     /**
+     * カスタム録画予約の追加
+     * @param option: CustomRecordingOption
+     * @return Promise<apid.AddedReserve>
+     */
+    public async addCustomRecording(option: apid.CustomRecordingOption): Promise<apid.AddedReserve> {
+        return this.reserveApiModel.addCustomRecording(option);
+    }
+
+    /**
      * 取得した予約情報を返す
      * @return ReserveStateData[]
      */

@@ -14,6 +14,7 @@
                                         :isShowDropInfo="false"
                                         v-on:detail="gotoRecordedDetail"
                                         v-on:stopEncode="stopEncode"
+                                        v-on:stopRecording="stopRecording"
                                         :noThumbnail="true"
                                     ></RecordedsmallCard>
                                 </div>
@@ -289,6 +290,29 @@ class Dashboard extends Vue {
             this.snackbarState.open({
                 color: 'error',
                 text: 'エンコード停止に失敗',
+            });
+        }
+    }
+
+    /**
+     * 録画停止
+     * @param reserveId: apid.ReserveId
+     */
+    public async stopRecording(reserveId: apid.ReserveId): Promise<void> {
+        try {
+            await this.recordingState.stopRecording(reserveId);
+            await this.recordingState.fetchData(this.createFetchRecordingDataOption());
+            await this.recordedState.fetchData(this.createFetchRecordedDataOption());
+
+            this.snackbarState.open({
+                color: 'success',
+                text: '録画を停止しました。',
+            });
+        } catch (err) {
+            console.error(err);
+            this.snackbarState.open({
+                color: 'error',
+                text: '録画の停止に失敗しました。',
             });
         }
     }

@@ -2,6 +2,7 @@ import * as apid from '../../../../../api';
 
 export default interface IReservesApiModel {
     add(option: apid.ManualReserveOption): Promise<apid.ReserveId>;
+    addCustomRecording(option: apid.CustomRecordingOption): Promise<apid.AddedReserve>;
     edit(reserveId: apid.ReserveId, option: apid.EditManualReserveOption): Promise<void>;
     get(reserveId: apid.ReserveId, isHalfWidth: boolean): Promise<apid.ReserveItem>;
     gets(option: apid.GetReserveOption): Promise<apid.Reserves>;

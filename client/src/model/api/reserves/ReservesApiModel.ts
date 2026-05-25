@@ -23,6 +23,17 @@ export default class ReservesApiModel implements IReservesApiModel {
     }
 
     /**
+     * カスタム録画予約の追加
+     * @param option: CustomRecordingOption
+     * @return Promise<apid.AddedReserve>
+     */
+    public async addCustomRecording(option: apid.CustomRecordingOption): Promise<apid.AddedReserve> {
+        const result = await this.repository.post('/custom-recording', option);
+
+        return result.data;
+    }
+
+    /**
      * 手動予約の更新
      * @param reserveId: apid.ReserveId
      * @param option: apid.EditManualReserveOption

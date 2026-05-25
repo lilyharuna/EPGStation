@@ -16,6 +16,15 @@
                     </v-list-item-content>
                 </v-list-item>
 
+                <v-list-item v-on:click="addCustomRecording">
+                    <v-list-item-icon class="mr-3">
+                        <v-icon>mdi-record-rec</v-icon>
+                    </v-list-item-icon>
+                    <v-list-item-content>
+                        <v-list-item-title>カスタム録画を追加</v-list-item-title>
+                    </v-list-item-content>
+                </v-list-item>
+
                 <v-list-item v-on:click="updateReserves">
                     <v-list-item-icon class="mr-3">
                         <v-icon>mdi-update</v-icon>
@@ -45,6 +54,11 @@ export default class ReservesMainMenu extends Vue {
 
     public edit(): void {
         this.$emit('edit');
+    }
+
+    public addCustomRecording(): void {
+        this.isOpened = false;
+        this.$emit('addCustomRecording');
     }
 
     public async updateReserves(): Promise<void> {

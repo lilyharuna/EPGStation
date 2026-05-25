@@ -11,4 +11,5 @@ export default interface IReservesState {
     selectAll(): void;
     clearSelect(): void;
     multiplueDeletion(): Promise<void>;
+    addCustomRecording(option: apid.CustomRecordingOption): Promise<apid.AddedReserve>;
 }
